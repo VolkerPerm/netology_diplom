@@ -1,7 +1,9 @@
 from datetime import datetime
 from pprint import pprint
 
+import vk as vk
 import vk_api
+from vk import api
 
 from config import acces_token
 from data_store import checked
@@ -22,8 +24,8 @@ class VkTools():
                      'id': info['id'],
                      'bdate': info['bdate'] if 'bdate' in info else None,
                      'home_town': info['home_town'],
-                     'sex': info['sex'],
-                     'city': info['city']['id']
+                     'sex': info['sex'] if 'sex' in info else 0,
+                     'city': info['city']['id'] if 'city' in info else 0
                     }
         return user_info
 
@@ -40,8 +42,8 @@ class VkTools():
 
 
         users = self.api.method('users.search',
-                                {'count': 10,
-                                 'offset': 0,
+                                {'count': 100,
+                                 'offset': 10,
                                  'age_from': age_from,
                                  'age_to': age_to,
                                  'sex': sex,
@@ -93,10 +95,28 @@ class VkTools():
 
         return res
 
+    def search_cities(self, city):
+        info_city = self.api.method("database.getCities",
+                                   {'items': 0,
+                                    'count': 1,
+                                    'offset': 0,
+                                    'id': 0,
+                                    'q': city}
+                                )
+        items_city = info_city['items']
+        for item_c in items_city:
+            id_user_city = item_c['id']
+
+            return id_user_city
+
+
 
 if __name__ == '__main__':
     bot = VkTools(acces_token)
     params = bot.get_profile_info(199494788)
-    users = bot.search_users(params)
-    pprint(users)
+    pprint(params)
+    print(bot.search_cities("Пермь"))
+
+    # users = bot.search_users(params)
+    # pprint(users)
     # pprint(bot.get_photos(users[2]['id']))

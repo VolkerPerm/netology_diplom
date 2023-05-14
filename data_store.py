@@ -18,6 +18,7 @@ class Viewed(Base):
     worksheet_id = sq.Column(sq.Integer, primary_key=True)
 
 def create_tables(engine):
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
 def add_bd(user_id, search_id):
@@ -40,6 +41,7 @@ def checked(user_id, user):
     if user in extraction_bd(user_id):
         return False
     return True
+
 
 
 if __name__ == '__main__':

@@ -23,41 +23,63 @@ class BotInterface():
                                }
                                )
 
+
+
     def event_handler(self):
         longpoll = VkLongPoll(self.interface)
+        create_tables(engine)
+
+        city_name_s = 'город '
 
         for event in longpoll.listen():
+
             if event.type == VkEventType.MESSAGE_NEW and event.to_me:
                 command = event.text.lower()
 
-                if command == 'привет' or command == 'здравствуй' or command == 'Здравствуйте':
+
+                if command == 'привет' or command == 'здравствуй' or command == 'здравствуйте':
                     self.params = self.api.get_profile_info(event.user_id)
                     self.message_send(event.user_id, f'Приветствую, {self.params["name"]}')
+                    if self.params['city'] == 0:
+                        self.message_send(event.user_id, f'Введите, пожалуйста, ваш город, например: город Москва')
+                    elif self.params['bdate'] == None:
+                        self.message_send(event.user_id, f'Введите, пожалуйста, вашу дату рождения в формате ДД.ММ.ГГГГ')
                 elif command == 'поиск':
-                    create_tables(engine)
+                    if self.params == None:
+                        self.message_send(event.user_id, f'Давайте, в начале поздороваемся?')
+                    elif self.params['city'] == 0:
+                        self.message_send(event.user_id, f'Давайте, в начале поздороваемся?')
+                    elif self.params['bdate'] == None:
+                        self.message_send(event.user_id, f'Давайте, в начале поздороваемся?')
+                    else:
+                        users = self.api.search_users(self.params)
+                        user = users.pop()
+                        photos_user = self.api.get_photos(user['id'])
 
-                    self.params = self.api.get_profile_info(event.user_id)
-                    users = self.api.search_users(self.params)
-                    user = users.pop()
+                        attachment = ''
+                        for num, photo in enumerate(photos_user):
+                            attachment += f'photo{photo["owner_id"]}_{photo["id"]}'
+                            if num == 2:
+                                break
+                        self.message_send(event.user_id,
+                                          f'Встречайте: {user["name"]} https://vk.com/id{user["id"]}',
+                                          attachment=attachment
+                                          )
+                        add_bd(event.user_id, user['id'])
 
-
-                    photos_user = self.api.get_photos(user['id'])
-
-                    attachment = ''
-                    for num, photo in enumerate(photos_user):
-                        attachment += f'photo{photo["owner_id"]}_{photo["id"]}'
-                        if num == 2:
-                            break
-                    self.message_send(event.user_id,
-                                            f'Встречайте: {user["name"]} https://vk.com/id{user["id"]}',
-                                            attachment=attachment
-                                                )
-                    # Здесь логика для добавления в бд
-                    add_bd(event.user_id, user['id'])
+                elif city_name_s in command:
+                    city_name = command[6:]
+                    city_users = self.api.search_cities(city_name)
+                    self.params['city'] = city_users
+                    self.message_send(event.user_id, f'Данные о городе получены')
+                elif len(command.split('.')) == 3:
+                    self.params['bdate'] = command
+                    self.message_send(event.user_id, f'Данные о дате рождения получены')
                 elif command == 'пока':
                     self.message_send(event.user_id, 'пока')
                 else:
-                    self.message_send(event.user_id, 'Команда не опознана. Для поиска собеседника наберите слово "поиск"')
+                    self.message_send(event.user_id, 'Команда не опознана. Для поиска собеседника наберите слово "поиск".')
+
 
 if __name__ == '__main__':
     bot = BotInterface(comunity_token, acces_token)
