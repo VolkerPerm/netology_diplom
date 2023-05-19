@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import vk_api
 import sqlalchemy
 from sqlalchemy.orm import session, Session
@@ -13,6 +15,7 @@ class BotInterface():
         self.interface = vk_api.VkApi(token=comunity_token)
         self.api = VkTools(acces_token)
         self.params = None
+        self.offset = 0
 
     def message_send(self, user_id, message, attachment=None):
         self.interface.method('messages.send',
@@ -23,7 +26,12 @@ class BotInterface():
                                }
                                )
 
-
+    def is_valid_date(self, date):
+        try:
+            datetime.strptime(date, '%d.%m.%Y')
+            return True, date
+        except ValueError:
+            return False
 
     def event_handler(self):
         longpoll = VkLongPoll(self.interface)
@@ -40,6 +48,7 @@ class BotInterface():
                 if command == 'привет' or command == 'здравствуй' or command == 'здравствуйте':
                     self.params = self.api.get_profile_info(event.user_id)
                     self.message_send(event.user_id, f'Приветствую, {self.params["name"]}')
+                    self.message_send(event.user_id, f'Для корректной работы советую ввести свою дату рождения в формате ДД.ММ.ГГГГ')
                     if self.params['city'] == 0:
                         self.message_send(event.user_id, f'Введите, пожалуйста, ваш город, например: город Москва')
                     elif self.params['bdate'] == None:
@@ -52,7 +61,8 @@ class BotInterface():
                     elif self.params['bdate'] == None:
                         self.message_send(event.user_id, f'Давайте, в начале поздороваемся?')
                     else:
-                        users = self.api.search_users(self.params)
+                        users = self.api.search_users(self.params, self.offset)
+                        self.offset = self.offset + 51
                         user = users.pop()
                         photos_user = self.api.get_photos(user['id'])
 
@@ -66,6 +76,7 @@ class BotInterface():
                                           attachment=attachment
                                           )
                         add_bd(event.user_id, user['id'])
+                        print(users)
 
                 elif city_name_s in command:
                     city_name = command[6:]
@@ -73,8 +84,13 @@ class BotInterface():
                     self.params['city'] = city_users
                     self.message_send(event.user_id, f'Данные о городе получены')
                 elif len(command.split('.')) == 3:
-                    self.params['bdate'] = command
-                    self.message_send(event.user_id, f'Данные о дате рождения получены')
+                    bdate_split = command
+                    if self.is_valid_date(bdate_split) == (True, bdate_split):
+                        self.api.get_profile_info(event.user_id)['bdate'] = bdate_split
+                        self.message_send(event.user_id, f'Данные о дате рождения получены')
+                    elif self.is_valid_date(bdate_split) == False:
+                        self.message_send(event.user_id, f'Неверно введена дата рождения')
+
                 elif command == 'пока':
                     self.message_send(event.user_id, 'пока')
                 else:
@@ -84,3 +100,4 @@ class BotInterface():
 if __name__ == '__main__':
     bot = BotInterface(comunity_token, acces_token)
     bot.event_handler()
+    # print(bot.is_valid_date('17.04.1991'))

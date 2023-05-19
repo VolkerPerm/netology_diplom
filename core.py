@@ -25,11 +25,13 @@ class VkTools():
                      'bdate': info['bdate'] if 'bdate' in info else None,
                      'home_town': info['home_town'],
                      'sex': info['sex'] if 'sex' in info else 0,
-                     'city': info['city']['id'] if 'city' in info else 0
+                     'city': info['city']['id'] if 'city' in info else 0,
+                     'offset': 0
                     }
         return user_info
 
-    def search_users(self, params):
+    def search_users(self, params, offset):
+
 
         sex = 1 if params['sex'] == 2 else 2
         city = params['city']
@@ -42,8 +44,8 @@ class VkTools():
 
 
         users = self.api.method('users.search',
-                                {'count': 100,
-                                 'offset': 10,
+                                {'count': 50,
+                                 'offset': offset,
                                  'age_from': age_from,
                                  'age_to': age_to,
                                  'sex': sex,
@@ -114,9 +116,9 @@ class VkTools():
 if __name__ == '__main__':
     bot = VkTools(acces_token)
     params = bot.get_profile_info(199494788)
-    pprint(params)
-    print(bot.search_cities("Пермь"))
+    # pprint(params)
+    # print(bot.search_cities("Пермь"))
 
-    # users = bot.search_users(params)
-    # pprint(users)
-    # pprint(bot.get_photos(users[2]['id']))
+    users = bot.search_users(params)
+    pprint(users)
+    pprint(bot.get_photos(users[2]['id']))
