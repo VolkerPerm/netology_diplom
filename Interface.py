@@ -15,7 +15,7 @@ class BotInterface():
         self.interface = vk_api.VkApi(token=comunity_token)
         self.api = VkTools(acces_token)
         self.params = None
-        self.offset = 0
+        self.offset = 1
 
     def message_send(self, user_id, message, attachment=None):
         self.interface.method('messages.send',
@@ -62,8 +62,11 @@ class BotInterface():
                         self.message_send(event.user_id, f'Давайте, в начале поздороваемся?')
                     else:
                         users = self.api.search_users(self.params, self.offset)
-                        self.offset = self.offset + 51
+                        # проверка пройден ли весь список
+                        if len(users) == 1:
+                            self.offset = self.offset + 11
                         user = users.pop()
+
                         photos_user = self.api.get_photos(user['id'])
 
                         attachment = ''
