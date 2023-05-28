@@ -1,23 +1,23 @@
 from datetime import datetime
 
 import vk_api
-import sqlalchemy
-from sqlalchemy.orm import session, Session
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.utils import get_random_id
-from data_store import add_bd, create_tables, extraction_bd, engine, Viewed, checked
+from data_store import add_bd, create_tables, engine
 from config import comunity_token, acces_token
 from core import VkTools
 
 class BotInterface():
 
     def __init__(self, comunity_token, acces_token):
+        '''Инициализация бота'''
         self.interface = vk_api.VkApi(token=comunity_token)
         self.api = VkTools(acces_token)
         self.params = None
         self.offset = 1
 
     def message_send(self, user_id, message, attachment=None):
+        '''Функция отправки сообщений'''
         self.interface.method('messages.send',
                               {'user_id': user_id,
                                'message': message,
@@ -27,6 +27,7 @@ class BotInterface():
                                )
 
     def is_valid_date(self, date):
+        '''Проверка верно ли указана дата'''
         try:
             datetime.strptime(date, '%d.%m.%Y')
             return True, date
@@ -34,6 +35,7 @@ class BotInterface():
             return False
 
     def event_handler(self):
+        '''Обработчик событий'''
         longpoll = VkLongPoll(self.interface)
         create_tables(engine)
 
@@ -79,7 +81,7 @@ class BotInterface():
                                           attachment=attachment
                                           )
                         add_bd(event.user_id, user['id'])
-                        print(users)
+
 
                 elif city_name_s in command:
                     city_name = command[6:]
@@ -96,6 +98,7 @@ class BotInterface():
 
                 elif command == 'пока':
                     self.message_send(event.user_id, 'пока')
+                    
                 else:
                     self.message_send(event.user_id, 'Команда не опознана. Для поиска собеседника наберите слово "поиск".')
 

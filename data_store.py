@@ -1,8 +1,7 @@
 import sqlalchemy
 import sqlalchemy as sq
-from sqlalchemy.orm import declarative_base, Session, session, sessionmaker
-from sqlalchemy import create_engine, MetaData
-import psycopg2
+from sqlalchemy.orm import declarative_base, session, sessionmaker
+from sqlalchemy import MetaData
 
 from config import db_url_object
 
@@ -18,6 +17,7 @@ class Viewed(Base):
     worksheet_id = sq.Column(sq.Integer, primary_key=True)
 
 def create_tables(engine):
+    '''Очистка таблицы и её создание'''
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 

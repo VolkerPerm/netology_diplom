@@ -1,9 +1,7 @@
 from datetime import datetime
 from pprint import pprint
 
-import vk as vk
 import vk_api
-from vk import api
 
 from config import acces_token
 from data_store import checked
@@ -11,10 +9,11 @@ from data_store import checked
 
 class VkTools():
     def __init__(self, acces_token):
+        '''Инициализация'''
         self.api = vk_api.VkApi(token=acces_token)
 
     def get_profile_info(self, user_id):
-
+        '''Выгрузка информации по профилю'''
         info, = self.api.method('users.get',
                                 {'user_id': user_id,
                                  'fields': 'city, bdate, sex, relation, home_town'
@@ -31,6 +30,7 @@ class VkTools():
         return user_info
 
     def search_users(self, params, offset):
+        '''Поиск кандидатов'''
 
 
         sex = 1 if params['sex'] == 2 else 2
@@ -44,7 +44,7 @@ class VkTools():
 
 
         users = self.api.method('users.search',
-                                {'count': 50,
+                                {'count': 10,
                                  'offset': offset,
                                  'age_from': age_from,
                                  'age_to': age_to,
@@ -71,6 +71,7 @@ class VkTools():
         return res
 
     def get_photos(self, user_id):
+        '''Загрузка фотографии'''
         photos = self.api.method('photos.get',
                                 {'user_id': user_id,
                                 'album_id': 'profile',
@@ -98,6 +99,7 @@ class VkTools():
         return res
 
     def search_cities(self, city):
+        '''Поиск id города'''
         info_city = self.api.method("database.getCities",
                                    {'items': 0,
                                     'count': 1,
